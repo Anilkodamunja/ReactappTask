@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React Application</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.25.6/babel.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+    }
+    .app-container {
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 200px;
+      background-color: #3b82f6;
+      color: white;
+      padding: 20px;
+      border-radius: 0 10px 10px 0;
+      height: 275px;
+      margin-top: 25px;
+    }
+    .sidebar h2 {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+    .sidebar li {
+      margin-bottom: 10px;
+    }
+    .sidebar button {
+      background-color: #1e40af;
+      color: white;
+      border: none;
+      padding: 10px;
+      width: 100%;
+      text-align: left;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .sidebar button:hover {
+      background-color: #2563eb;
+    }
+    .sidebar button.active {
+      background-color: #f59e0b;
+    }
+    .sidebar button.active:hover {
+      background-color: #d97706;
+    }
+    .content {
+      flex: 1;
+      padding: 20px;
+    }
+    .auction-table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .auction-table th,
+    .auction-table td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    .auction-table th {
+      background-color: #3b82f6;
+      color: white;
+    }
+    .auction-table img {
+      width: 100px;
+      height: auto;
+      border-radius: 5px;
+    }
+    .wishlist-btn {
+      background-color: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .form-container {
+      background-color: #3b82f6;
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .form-container h2 {
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+    .form-group {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      gap: 25px;
+    }
+    .form-group div {
+      flex: 1;
+      margin-right: 10px;
+    }
+    .form-group div:last-child {
+      margin-right: 0;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 8px;
+      border: none;
+      border-radius: 5px;
+      background-color: #d1d5db;
+    }
+    .update-btn {
+      background-color: #f59e0b;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      display: block;
+      margin: 20px auto 0;
+    }
+    .update-btn:hover {
+      background-color: #d97706;
+    }
+    .error-message {
+      color: red;
+      text-align: center;
+      padding: 20px;
+      font-size: 16px;
+    }
+    .password-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .password-container input {
+      width: 100%;
+      padding-right: 30px; /* Space for the eye icon */
+    }
+    .eye-icon {
+      position: absolute;
+      right: 10px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div id="root" class="css-loaded"></div>
+  <script type="text/babel">
+    // Fallback if React or Babel fails to load
+    if (typeof React === 'undefined' || typeof ReactDOM === 'undefined' || typeof Babel === 'undefined') {
+      document.getElementById('root').innerHTML = `
+        <div class="error-message">
+          Failed to load required resources. Please ensure you have an active internet connection and try again.
+          If the issue persists, check your DNS settings or use a local server (e.g., Live Server in VS Code).
+        </div>
+      `;
+    } else {
+      console.log('React, ReactDOM, and Babel loaded successfully.');
+
+      function Sidebar({ setView, view }) {
+        return (
+          <div className="sidebar">
+            <h2>Swipe auctions</h2>
+            <ul>
+              <li>
+                <button 
+                  className={view === 'editProfile' ? 'active' : ''} 
+                  onClick={() => setView('editProfile')}
+                >
+                  Edit profile
+                </button>
+              </li>
+              <li>
+                <button 
+                  className={view === 'auctionList' ? 'active' : ''} 
+                  onClick={() => setView('auctionList')}
+                >
+                  Wish List
+                </button>
+              </li>
+              <li>
+                <button 
+                  className={view === 'changePassword' ? 'active' : ''} 
+                  onClick={() => setView('changePassword')}
+                >
+                  confirm password
+                </button>
+              </li>
+              <li>
+                <button onClick={() => alert('Logged out')}>
+                  Logout
+                </button>
+              </li>
+            </ul>
+          </div>
+        );
+      }
+
+      function AuctionList() {
+        const auctions = [
+          {
+            image: "https://via.placeholder.com/100",
+            product: "MARUTI GRAND-VITARA-HYBRID-DELTA",
+            bid: "₹10,000",
+            bids: 0,
+            endsIn: "MS-JACKSON Auction in 4D 44H 49Min",
+            location: "Vijayawada - A.P",
+          },
+          {
+            image: "https://via.placeholder.com/100",
+            product: "MARUTI GRAND-VITARA-HYBRID-DELTA",
+            bid: "₹10,000",
+            bids: 0,
+            endsIn: "MS-JACKSON Auction in 4D 44H 49Min",
+            location: "Vijayawada - A.P",
+          },
+        ];
+
+        return (
+          <table className="auction-table">
+            <thead>
+              <tr>
+                <th>IMAGE</th>
+                <th>Auction Product</th>
+                <th>Current Bid</th>
+                <th>No of Bids</th>
+                <th>Ends In</th>
+              </tr>
+            </thead>
+            <tbody>
+              {auctions.map((auction, index) => (
+                <tr key={index}>
+                  <td>
+                    <img src={auction.image} alt="Auction Item" />
+                  </td>
+                  <td>
+                    <div>
+                      <p>{ auction.product}</p>
+                      <p>Lot #660</p>
+                      <button className="wishlist-btn">
+                        ⭐ Wish List
+                      </button>
+                    </div>
+                  </td>
+                  <td>{auction.bid}</td>
+                  <td>{auction.bids}</td>
+                  <td>
+                    <div>
+                      <p>{auction.endsIn}</p>
+                      <p>📍 {auction.location}</p>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        );
+      }
+
+      function EditProfile() {
+        return (
+          <div className="form-container">
+            <h2>EDIT PROFILE</h2>
+            <div className="form-group">
+              <div>
+                <label>First Name</label>
+                <input type="text" />
+              </div>
+              <div>
+                <label>Last Name</label>
+                <input type="text" />
+              </div>
+            </div>
+            <div className="form-group">
+              <div>
+                <label>email address</label>
+                <input type="email" />
+              </div>
+              <div>
+                <label>password</label>
+                <input type="password" />
+              </div>
+            </div>
+            <div className="form-group">
+              <div>
+                <label>Location</label>
+                <input type="text" />
+              </div>
+              <div>
+                <label>User Type</label>
+                <select>
+                  <option>User</option>
+                  <option>Dealer</option>
+                  <option>Finance</option>
+                  <option>Bank</option>
+                </select>
+              </div>
+            </div>
+            <button className="update-btn">Updated Profile</button>
+          </div>
+        );
+      }
+
+      function ChangePassword() {
+        const [showCurrentPassword, setShowCurrentPassword] = React.useState(false);
+        const [showNewPassword, setShowNewPassword] = React.useState(false);
+        const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+
+        const toggleCurrentPassword = () => setShowCurrentPassword(!showCurrentPassword);
+        const toggleNewPassword = () => setShowNewPassword(!showNewPassword);
+        const toggleConfirmPassword = () => setShowConfirmPassword(!showConfirmPassword);
+
+        return (
+          <div className="form-container">
+            <h2>CHANGE PASSWORD</h2>
+            <div className="form-group">
+              <div>
+                <label>current password</label>
+                <div className="password-container">
+                  <input type={showCurrentPassword ? "text" : "password"} />
+                  <span className="eye-icon" onClick={toggleCurrentPassword}>
+                    {showCurrentPassword ? "👁️‍🗨️" : "👁️"}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <label>New password</label>
+                <div className="password-container">
+                  <input type={showNewPassword ? "text" : "password"} />
+                  <span className="eye-icon" onClick={toggleNewPassword}>
+                    {showNewPassword ? "👁️‍🗨️" : "👁️"}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="form-group">
+              <div>
+                <label>confirm password</label>
+                <div className="password-container">
+                  <input type={showConfirmPassword ? "text" : "password"} />
+                  <span className="eye-icon" onClick={toggleConfirmPassword}>
+                    {showConfirmPassword ? "👁️‍🗨️" : "👁️"}
+                  </span>
+                </div>
+              </div>
+              <div></div>
+            </div>
+            <button className="update-btn">Updated Profile</button>
+          </div>
+        );
+      }
+
+      function App() {
+        const [view, setView] = React.useState('auctionList');
+        console.log("App component rendered, current view:", view);
+        return (
+          <div className="app-container css-loaded">
+            <Sidebar setView={setView} view={view} />
+            <div className="content">
+              {view === 'auctionList' && <AuctionList />}
+              {view === 'editProfile' && <EditProfile />}
+              {view === 'changePassword' && <ChangePassword />}
+            </div>
+          </div>
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App />);
+    }
+  </script>
+</body>
+</html>
